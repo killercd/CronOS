@@ -2,14 +2,16 @@
 
 CronOS is a tiny toy operating system project built for fun and experimentation.
 
-At the moment, CronOS contains only a minimal x86 bootloader. It is a 512-byte boot sector written in 16-bit assembly that can be loaded by a BIOS-compatible emulator. When it starts, it initializes the basic segment registers and stack, prints a short startup message, and then halts the CPU.
+At the moment, CronOS contains only a minimal x86 bootloader. It is a 512-byte boot sector written in 16-bit assembly that can be loaded by a BIOS-compatible emulator. When it starts, it initializes the basic segment registers and stack, switches to VGA 80x25 color text mode, paints the screen white-on-blue, writes a short startup message directly to VGA text memory, and then halts the CPU.
 
 ![CronOS running in QEMU](s_img/qemu_start.png)
 
 ## Current Status
 
 - 16-bit x86 bootloader
-- BIOS teletype output through `int 0x10`
+- VGA 80x25 color text mode setup through BIOS video services
+- Direct text output through VGA memory at `0xB800`
+- White-on-blue startup screen
 - Boot sector signature `0xAA55`
 - Runs as a raw floppy image in QEMU
 
@@ -54,6 +56,8 @@ You should see:
 ```text
 CronOS ver 1.0
 ```
+
+The text appears in the top-left corner on a blue VGA text-mode screen.
 
 ## License
 

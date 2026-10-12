@@ -1,39 +1,54 @@
 
-BITS 16                ; Generate 16-bit x86 code
-ORG 0x7C00             ; Set the code origin to 0x7C00
+BITS 16
+ORG 0x7C00
 
 start:
-    xor ax, ax         ; Clear AX (AX = 0)
-    mov ds, ax         ; Set Data Segment to 0
-    mov es, ax         ; Set Extra Segment to 0
+    xor ax, ax
+    mov ds, ax
 
-    cli                ; Disable maskable interrupts
-    mov ss, ax         ; Set Stack Segment to 0
-    mov sp, 0x7C00     ; Set the stack top to 0x7C00
-    sti                ; Enable maskable interrupts
+    cli
+    mov ss, ax
+    mov sp, 0x7C00
+    sti
 
-    mov si, message    ; Point SI to the start of the string
+    ; Set VGA 80x25 color text mode
+    mov ax, 0x0003
+    int 0x10
+
+    ; Set ES to VGA text memory segment
+    mov ax, 0xB800
+    mov es, ax
+
+    ; Fill the screen with white-on-blue spaces
+    xor di, di
+    mov ax, 0x1F20
+    mov cx, 2000
+    cld
+    rep stosw
+
+    ; Point to the beginning of our string
+    mov si, message
+
+    ; Start writing at the top-left corner
+    xor di, di
 
 print_loop:
-    mov al, [si]       ; Load the current character into AL
-    inc si             ; Move to the next character
-    test al, al        ; Check whether AL is zero
-    jz halt            ; Jump if the string has ended
+    mov al, [si]       ; Load current character
+    inc si             ; Move to next character
+    test al, al        ; Check for null terminator
+    jz halt
 
-    mov ah, 0x0E       ; Select BIOS teletype output
-    mov bh, 0x00       ; Select video page 0
-    mov bl, 0x07       ; Set text color attribute
-    int 0x10           ; Call BIOS video services
-
-    jmp print_loop    ; Continue printing characters
+    mov ah, 0x1F       ; White text on blue background
+    stosw              ; Write character and attribute
+    jmp print_loop
 
 halt:
-    cli                ; Disable maskable interrupts
-    hlt                ; Halt the CPU
-    jmp halt           ; Halt again if execution resumes
+    cli
+    hlt
+    jmp halt
 
 message:
-    db 'CronOS ver 1.0', 0  ; Null-terminated string
+    db 'CronOS ver 1.0', 0
 
-times 510 - ($ - $$) db 0  ; Pad the sector to 510 bytes
-dw 0xAA55                  ; Boot signature (55 AA)
+times 510 - ($ - $$) db 0
+dw 0xAA55
